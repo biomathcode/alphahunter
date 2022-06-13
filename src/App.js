@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import { Metadata } from "@metaplex-foundation/mpl-token-metadata";
 import { Connection } from "@solana/web3.js";
@@ -10,41 +10,42 @@ function App() {
   const [data, setData] = useState();
 
   const [image, setImage] = useState([]);
-  async function connectWallet() {
-    try {
-      setWallet(await window.solana.connect());
-      setWalletaddress(window.solana.publicKey.toString());
-      console.log(walletaddress);
-      const connectionMetaplex = new Connection(
-        "https://api.metaplex.solana.com",
-        "confirmed"
-      );
-      const t_walletAddress = "7EMdrCmpx7Pogha1r363176NQCMaWrwrReApvQTpmEd2";
-      const nftsmetadata = await Metadata.findDataByOwner(
-        connectionMetaplex,
-        t_walletAddress
-      );
 
-      setData(nftsmetadata);
-
+  useEffect(() => {
+    if (data) {
       let imagesData = [];
 
-      nftsmetadata.map(async (el) => {
-        const data = await fetch(el.data.uri);
-        const dt = await data.json();
+      data.map(async (el) => {
+        const resdata = await fetch(el.data.uri);
+        const dt = await resdata.json();
         const newData = {
           name: dt.name,
           image: dt.image,
           symbol: dt.symbol,
         };
 
-        console.log("thisis teh new data", newData);
-
         imagesData.push(newData);
       });
 
       setImage(imagesData);
-    } catch (err) {}
+    }
+  }, [wallet]);
+
+  async function connectWallet() {
+    setWallet(await window.solana.connect());
+    setWalletaddress(window.solana.publicKey.toString());
+    console.log(walletaddress);
+    const connectionMetaplex = new Connection(
+      "https://api.metaplex.solana.com",
+      "confirmed"
+    );
+    const t_walletAddress = "7EMdrCmpx7Pogha1r363176NQCMaWrwrReApvQTpmEd2";
+    const nftsmetadata = await Metadata.findDataByOwner(
+      connectionMetaplex,
+      t_walletAddress
+    );
+
+    setData(nftsmetadata);
   }
 
   return (
